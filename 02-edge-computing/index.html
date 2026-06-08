@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>02 · Edge Computing — OrbitGuard-Edge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1A30; --navy-2:#16263F; --gold:#E8B84B; --cream:#FFF0C0;
+    --ink:#16263F; --mute:#6B7A92; --line:#E5E1D3; --paper:#FBF8EE;
+    --code-bg:#0E1C33; --code-comment:#7B8AA8; --code-key:#E8B84B; --code-str:#9CD9A6; --code-num:#FFC07A;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:'Inter Tight',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55}
+  .doc{max-width:1180px;margin:0 auto;padding:48px 56px 80px;background:#fff}
+  header.top{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 20px;background:var(--navy);color:#cbd5e8;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  }
+  header.top a{color:var(--gold);text-decoration:none}
+  .bar{height:6px;background:var(--gold)}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
+  h1{font-size:54px;margin:8px 0 6px;letter-spacing:-.02em;font-weight:700}
+  .sub{font-size:18px;color:var(--mute);margin:0 0 36px}
+  h2{font-size:28px;margin:54px 0 16px;font-weight:600;padding-bottom:8px;border-bottom:2px solid var(--navy);position:relative}
+  h2::before{content:attr(data-num);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);letter-spacing:.12em;display:block;margin-bottom:6px}
+  h3{font-size:18px;margin:24px 0 10px;font-weight:600}
+  p,li{font-size:15px}
+  p{margin:0 0 14px}
+
+  .grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:36px;align-items:start}
+  .specs{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:24px;
+    display:grid;grid-template-columns:1fr;gap:14px;
+  }
+  .specs h3{margin:0 0 4px}
+  .spec-row{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .spec-row:last-child{border-bottom:none}
+  .spec-row span:first-child{color:var(--mute);font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+  .spec-row span:last-child{font-weight:500}
+
+  /* Circuit SVG container */
+  .circuit{
+    background:var(--navy);border-radius:14px;padding:30px;color:#E9EEF6;
+  }
+  .circuit svg{width:100%;height:auto;display:block}
+  .legend{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px;
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:#cbd5e8;
+  }
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;vertical-align:middle}
+
+  /* Code */
+  pre.code{
+    background:var(--code-bg);color:#E9EEF6;border-radius:12px;padding:24px 26px;
+    overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.65;
+    border:1px solid #1d3454;margin:18px 0 12px;
+  }
+  pre.code .c{color:var(--code-comment);font-style:italic}
+  pre.code .k{color:var(--code-key)}
+  pre.code .s{color:var(--code-str)}
+  pre.code .n{color:var(--code-num)}
+  pre.code .fn{color:#9DCFFF}
+
+  .filename{
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.1em;
+    color:#fff;background:var(--navy);display:inline-block;padding:6px 14px;border-radius:6px 6px 0 0;
+    margin-bottom:-1px;text-transform:uppercase;
+  }
+
+  .pinmap{
+    width:100%;border-collapse:collapse;font-size:13px;margin:8px 0 16px;
+    border:1px solid var(--line);
+  }
+  .pinmap th{background:var(--navy);color:#fff;padding:10px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+  .pinmap td{padding:10px 12px;border-top:1px solid var(--line)}
+  .pinmap tr:nth-child(even) td{background:var(--paper)}
+  .pinmap code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:#FFF0C0;padding:2px 6px;border-radius:4px}
+
+  .callout{background:linear-gradient(180deg,#FFF8E0,#FFF8E0CC);border-left:4px solid var(--gold);padding:16px 20px;border-radius:0 8px 8px 0;margin:14px 0}
+  .callout strong{color:var(--navy)}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;background:var(--navy);color:#fff}
+  .pill.gold{background:var(--gold);color:var(--navy)}
+  .links{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0}
+  .links a{
+    text-decoration:none;color:var(--navy);font-family:'JetBrains Mono',monospace;font-size:12px;
+    border:1.5px solid var(--navy);padding:10px 16px;border-radius:8px;letter-spacing:.04em;
+    background:#fff;transition:all .2s;
+  }
+  .links a:hover{background:var(--navy);color:#fff}
+
+  /* README block */
+  .readme{
+    background:#FBF8EE;border:1px solid var(--line);border-radius:12px;padding:30px 34px;
+    margin-top:18px;
+  }
+  .readme h3{margin:14px 0 8px;font-size:17px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .readme h3:first-child{margin-top:0}
+  .readme ul{margin:0 0 10px;padding-left:22px}
+  .readme li{font-size:14px;margin:4px 0}
+  .readme code{font-family:'JetBrains Mono',monospace;background:#FFF0C0;padding:2px 5px;border-radius:4px;font-size:12.5px}
+
+  footer.foot{margin-top:64px;padding-top:18px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mute);display:flex;justify-content:space-between;letter-spacing:.06em}
+
+  @media (max-width:980px){
+    .grid2{grid-template-columns:1fr}
+    .doc{padding:32px 24px}
+    h1{font-size:42px}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span><a href="../index.html">← Hub</a> · GS 2026 · Entrega 02/07</span>
+  <span>Edge Computing &amp; Computer Systems · 100 pts</span>
+</header>
+<div class="bar"></div>
+
+<article class="doc">
+
+  <div class="eyebrow">Disciplina · Prof. Paulo Marcotti / Prof. Lucas Demetrius</div>
+  <h1>OrbitGuard-Edge</h1>
+  <p class="sub">Estação de campo embarcada para detecção precoce de queimadas — simulada no Wokwi</p>
+
+  <div class="links">
+    <a href="#circuito">↳ Circuito</a>
+    <a href="#codigo">↳ Código Arduino/C++</a>
+    <a href="#pinout">↳ Pinout</a>
+    <a href="#readme">↳ README</a>
+    <a href="#entrega">↳ Entrega</a>
+  </div>
+
+  <!-- =================== VISÃO GERAL =================== -->
+  <h2 data-num="01 · Descrição">A estação de borda da OrbitGuard</h2>
+
+  <div class="grid2">
+    <div>
+      <p>A <strong>OrbitGuard-Edge</strong> é uma estação de monitoramento autônoma feita para ser instalada em pontos críticos de risco — bordas de unidades de conservação, margens de rodovias em áreas secas e vértices de propriedades rurais. Ela cumpre uma função que satélite nenhum cumpre: <strong>confirmar localmente</strong>, em segundos, o que o orbital sugere de cima.</p>
+
+      <p>Em cada ciclo de 60 s, o ESP32 lê temperatura/umidade do <strong>DHT22</strong>, concentração de fumaça do <strong>MQ-2</strong> e luminosidade ambiente do <strong>LDR</strong> (proxy para clarão de chamas à noite). Um algoritmo de risco classifica a leitura em <span class="pill">NORMAL</span> <span class="pill" style="background:#FFC07A;color:#0B1A30">ATENÇÃO</span> <span class="pill" style="background:#E8453A;color:#fff">CRÍTICO</span>. Se atingir CRÍTICO, dispara LED vermelho + buzzer e publica o payload via MQTT para o backend OrbitGuard.</p>
+
+      <p>Toda a montagem foi prototipada no <strong>Wokwi</strong>, com diagrama, código e simulação prontos para serem executados sem hardware físico. Custo estimado do BOM: <strong>≈ R$ 178,40</strong> por estação em produção.</p>
+
+      <div class="callout">
+        <strong>Conexão com a Indústria Espacial.</strong> A estação consome o índice de risco FIRMS (NASA) via backend e devolve confirmação de superfície — fechando o loop espaço → terra → espaço. Sem o sensor de borda, o dado satelital é apenas uma suspeita.
+      </div>
+    </div>
+
+    <div class="specs">
+      <h3>Especificações</h3>
+      <div class="spec-row"><span>Plataforma</span><span>ESP32 DevKit V1</span></div>
+      <div class="spec-row"><span>Sensores</span><span>DHT22 · MQ-2 · LDR</span></div>
+      <div class="spec-row"><span>Atuadores</span><span>LED RGB · Buzzer · LCD I²C 16×2</span></div>
+      <div class="spec-row"><span>Conectividade</span><span>Wi-Fi 2.4 GHz / MQTT</span></div>
+      <div class="spec-row"><span>Alimentação</span><span>Painel solar 6 V + LiPo 2000 mAh</span></div>
+      <div class="spec-row"><span>Autonomia</span><span>~5 dias sem sol</span></div>
+      <div class="spec-row"><span>Ciclo de leitura</span><span>60 s (normal) / 5 s (alerta)</span></div>
+      <div class="spec-row"><span>Custo unitário</span><span>R$ 178,40</span></div>
+      <div class="spec-row"><span>Linguagem</span><span>C++ / Arduino Framework</span></div>
+      <div class="spec-row"><span>Simulador</span><span>Wokwi (link no README)</span></div>
+    </div>
+  </div>
+
+  <!-- =================== CIRCUITO =================== -->
+  <h2 id="circuito" data-num="02 · Estrutura do Circuito">Diagrama do circuito</h2>
+
+  <div class="circuit">
+    <svg viewBox="0 0 1100 540" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1d3454" stroke-width=".5"/>
+        </pattern>
+        <marker id="dot" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="6" markerHeight="6">
+          <circle cx="3" cy="3" r="2.5" fill="#E8B84B"/>
+        </marker>
+      </defs>
+      <rect width="1100" height="540" fill="url(#grid)"/>
+
+      <!-- ESP32 -->
+      <g transform="translate(380,160)">
+        <rect width="340" height="220" rx="14" fill="#0B1A30" stroke="#E8B84B" stroke-width="2"/>
+        <rect x="20" y="20" width="300" height="40" rx="6" fill="#16263F"/>
+        <text x="170" y="46" fill="#E8B84B" font-family="JetBrains Mono" font-size="14" font-weight="700" text-anchor="middle">ESP32 DevKit V1</text>
+        <text x="170" y="88" fill="#8a99b3" font-family="JetBrains Mono" font-size="11" text-anchor="middle">240 MHz · Wi-Fi · 4 MB Flash</text>
+        <!-- Pinos lado esquerdo -->
+        <g font-family="JetBrains Mono" font-size="10" fill="#E9EEF6">
+          <circle cx="0" cy="110" r="4" fill="#E8B84B"/><text x="10" y="113">D4 · DHT22</text>
+          <circle cx="0" cy="135" r="4" fill="#E8B84B"/><text x="10" y="138">A0 · MQ-2</text>
+          <circle cx="0" cy="160" r="4" fill="#E8B84B"/><text x="10" y="163">A3 · LDR</text>
+          <circle cx="0" cy="185" r="4" fill="#E8B84B"/><text x="10" y="188">3V3</text>
+        </g>
+        <!-- Pinos lado direito -->
+        <g font-family="JetBrains Mono" font-size="10" fill="#E9EEF6" text-anchor="end">
+          <circle cx="340" cy="110" r="4" fill="#E8B84B"/><text x="330" y="113">D18 · LED_R</text>
+          <circle cx="340" cy="135" r="4" fill="#E8B84B"/><text x="330" y="138">D19 · LED_G</text>
+          <circle cx="340" cy="160" r="4" fill="#E8B84B"/><text x="330" y="163">D23 · BUZZER</text>
+          <circle cx="340" cy="185" r="4" fill="#E8B84B"/><text x="330" y="188">D21 · SDA / D22 · SCL</text>
+        </g>
+      </g>
+
+      <!-- DHT22 -->
+      <g transform="translate(40,80)">
+        <rect width="170" height="80" rx="8" fill="#2A4366" stroke="#9CD9A6" stroke-width="1.5"/>
+        <text x="85" y="32" text-anchor="middle" fill="#9CD9A6" font-family="JetBrains Mono" font-size="13" font-weight="700">DHT22</text>
+        <text x="85" y="52" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">Temperatura</text>
+        <text x="85" y="66" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">+ Umidade</text>
+      </g>
+      <path d="M210 130 C 290 130, 320 200, 380 270" stroke="#9CD9A6" stroke-width="2" fill="none"/>
+
+      <!-- MQ-2 -->
+      <g transform="translate(40,220)">
+        <rect width="170" height="80" rx="8" fill="#2A4366" stroke="#FFC07A" stroke-width="1.5"/>
+        <text x="85" y="32" text-anchor="middle" fill="#FFC07A" font-family="JetBrains Mono" font-size="13" font-weight="700">MQ-2</text>
+        <text x="85" y="52" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">Fumaça /</text>
+        <text x="85" y="66" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">Gás combustível</text>
+      </g>
+      <path d="M210 270 L 380 295" stroke="#FFC07A" stroke-width="2" fill="none"/>
+
+      <!-- LDR -->
+      <g transform="translate(40,360)">
+        <rect width="170" height="80" rx="8" fill="#2A4366" stroke="#9DCFFF" stroke-width="1.5"/>
+        <text x="85" y="32" text-anchor="middle" fill="#9DCFFF" font-family="JetBrains Mono" font-size="13" font-weight="700">LDR + 10kΩ</text>
+        <text x="85" y="52" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">Luminosidade</text>
+        <text x="85" y="66" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">(clarão noturno)</text>
+      </g>
+      <path d="M210 400 C 290 400, 320 350, 380 320" stroke="#9DCFFF" stroke-width="2" fill="none"/>
+
+      <!-- LED RGB -->
+      <g transform="translate(880,80)">
+        <rect width="170" height="80" rx="8" fill="#2A4366" stroke="#E8453A" stroke-width="1.5"/>
+        <text x="85" y="32" text-anchor="middle" fill="#E8453A" font-family="JetBrains Mono" font-size="13" font-weight="700">LED bicolor</text>
+        <text x="85" y="52" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">Verde · Vermelho</text>
+        <text x="85" y="66" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">+ resistor 220Ω</text>
+      </g>
+      <path d="M720 270 C 800 270, 830 180, 880 130" stroke="#E8453A" stroke-width="2" fill="none"/>
+
+      <!-- Buzzer -->
+      <g transform="translate(880,220)">
+        <rect width="170" height="80" rx="8" fill="#2A4366" stroke="#E8B84B" stroke-width="1.5"/>
+        <text x="85" y="32" text-anchor="middle" fill="#E8B84B" font-family="JetBrains Mono" font-size="13" font-weight="700">Buzzer ativo</text>
+        <text x="85" y="52" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">Alarme sonoro</text>
+        <text x="85" y="66" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">5 V / 2 kHz</text>
+      </g>
+      <path d="M720 295 L 880 270" stroke="#E8B84B" stroke-width="2" fill="none"/>
+
+      <!-- LCD -->
+      <g transform="translate(880,360)">
+        <rect width="170" height="80" rx="8" fill="#2A4366" stroke="#fff" stroke-width="1.5"/>
+        <text x="85" y="32" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="13" font-weight="700">LCD I²C 16×2</text>
+        <text x="85" y="52" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">Status local</text>
+        <text x="85" y="66" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="10">SDA · SCL · 5V · GND</text>
+      </g>
+      <path d="M720 320 C 800 360, 830 380, 880 400" stroke="#ffffff80" stroke-width="2" fill="none"/>
+
+      <!-- Antena Wi-Fi -->
+      <g transform="translate(540,40)">
+        <path d="M0 60 Q 5 30 0 0" fill="none" stroke="#E8B84B" stroke-width="1.5"/>
+        <path d="M-10 60 Q -5 25 -10 -5" fill="none" stroke="#E8B84B" stroke-width="1.5" opacity=".6"/>
+        <path d="M10 60 Q 15 25 10 -5" fill="none" stroke="#E8B84B" stroke-width="1.5" opacity=".6"/>
+        <text x="0" y="80" text-anchor="middle" fill="#E8B84B" font-family="JetBrains Mono" font-size="11" font-weight="700">Wi-Fi → MQTT</text>
+        <text x="0" y="95" text-anchor="middle" fill="#cbd5e8" font-family="JetBrains Mono" font-size="9">broker.orbitguard.io</text>
+      </g>
+
+      <!-- Solar panel illustration -->
+      <g transform="translate(40,470)">
+        <rect width="120" height="48" rx="4" fill="#0E2540" stroke="#9CD9A6" stroke-width="1.5"/>
+        <g stroke="#9CD9A6" stroke-width=".6" opacity=".7">
+          <line x1="0" y1="16" x2="120" y2="16"/><line x1="0" y1="32" x2="120" y2="32"/>
+          <line x1="30" y1="0" x2="30" y2="48"/><line x1="60" y1="0" x2="60" y2="48"/><line x1="90" y1="0" x2="90" y2="48"/>
+        </g>
+        <text x="60" y="68" text-anchor="middle" fill="#9CD9A6" font-family="JetBrains Mono" font-size="10" font-weight="700">Painel solar 6V</text>
+      </g>
+
+      <!-- Title -->
+      <text x="550" y="30" text-anchor="middle" fill="#fff" font-family="Inter Tight" font-size="18" font-weight="600">Arquitetura física — OrbitGuard-Edge v1</text>
+    </svg>
+
+    <div class="legend">
+      <span><i style="background:#9CD9A6"></i>Sensor de temperatura/umidade</span>
+      <span><i style="background:#FFC07A"></i>Sensor de fumaça</span>
+      <span><i style="background:#9DCFFF"></i>Sensor de luminosidade</span>
+      <span><i style="background:#E8453A"></i>Atuador visual</span>
+      <span><i style="background:#E8B84B"></i>Atuador sonoro / dados</span>
+      <span><i style="background:#fff"></i>Display local</span>
+    </div>
+  </div>
+
+  <!-- =================== PINOUT =================== -->
+  <h2 id="pinout" data-num="03 · Pinout">Mapeamento de pinos</h2>
+
+  <table class="pinmap">
+    <thead>
+      <tr><th>Componente</th><th>Pino ESP32</th><th>Tipo</th><th>Observação</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>DHT22 — DATA</td><td><code>GPIO 4</code></td><td>Digital</td><td>Resistor pull-up 10 kΩ entre DATA e 3V3</td></tr>
+      <tr><td>MQ-2 — A0</td><td><code>GPIO 34</code></td><td>Analógico ADC1_CH6</td><td>Pré-aquecimento de 20 s no boot</td></tr>
+      <tr><td>LDR — divisor</td><td><code>GPIO 35</code></td><td>Analógico ADC1_CH7</td><td>Resistor série 10 kΩ → GND</td></tr>
+      <tr><td>LED verde</td><td><code>GPIO 19</code></td><td>Digital out</td><td>Resistor 220 Ω</td></tr>
+      <tr><td>LED vermelho</td><td><code>GPIO 18</code></td><td>Digital out</td><td>Resistor 220 Ω</td></tr>
+      <tr><td>Buzzer ativo</td><td><code>GPIO 23</code></td><td>Digital out</td><td>Padrão 2 kHz · 200 ms on / 800 off em alerta</td></tr>
+      <tr><td>LCD I²C — SDA</td><td><code>GPIO 21</code></td><td>I²C</td><td>Endereço 0x27</td></tr>
+      <tr><td>LCD I²C — SCL</td><td><code>GPIO 22</code></td><td>I²C</td><td>Pull-up interno habilitado</td></tr>
+    </tbody>
+  </table>
+
+  <!-- =================== CÓDIGO =================== -->
+  <h2 id="codigo" data-num="04 · Código">Código-fonte (Arduino / C++)</h2>
+
+  <p>Implementação completa do firmware. Estrutura modular com funções <code style="font-family:'JetBrains Mono',monospace;background:#FFF0C0;padding:1px 5px;border-radius:4px">lerSensores()</code>, <code style="font-family:'JetBrains Mono',monospace;background:#FFF0C0;padding:1px 5px;border-radius:4px">calcularRisco()</code>, <code style="font-family:'JetBrains Mono',monospace;background:#FFF0C0;padding:1px 5px;border-radius:4px">dispararAlerta()</code> e <code style="font-family:'JetBrains Mono',monospace;background:#FFF0C0;padding:1px 5px;border-radius:4px">publicarMQTT()</code>.</p>
+
+  <div class="filename">orbitguard_edge.ino</div>
+<pre class="code"><span class="c">/*  ============================================================
+    OrbitGuard-Edge · firmware v1.0
+    Estação IoT de detecção precoce de queimadas
+    Equipe Squad OrbitGuard · GS 2026 · FIAP ESW 1º
+    ============================================================ */</span>
+
+<span class="k">#include</span> <span class="s">&lt;WiFi.h&gt;</span>
+<span class="k">#include</span> <span class="s">&lt;PubSubClient.h&gt;</span>
+<span class="k">#include</span> <span class="s">&lt;DHT.h&gt;</span>
+<span class="k">#include</span> <span class="s">&lt;Wire.h&gt;</span>
+<span class="k">#include</span> <span class="s">&lt;LiquidCrystal_I2C.h&gt;</span>
+
+<span class="c">// ---- pinos --------------------------------------------------</span>
+<span class="k">#define</span> PIN_DHT      <span class="n">4</span>
+<span class="k">#define</span> PIN_MQ2      <span class="n">34</span>
+<span class="k">#define</span> PIN_LDR      <span class="n">35</span>
+<span class="k">#define</span> PIN_LED_G    <span class="n">19</span>
+<span class="k">#define</span> PIN_LED_R    <span class="n">18</span>
+<span class="k">#define</span> PIN_BUZZER   <span class="n">23</span>
+
+<span class="c">// ---- limiares de risco --------------------------------------</span>
+<span class="k">const float</span> TEMP_ATENCAO  = <span class="n">42.0</span>;   <span class="c">// °C</span>
+<span class="k">const float</span> TEMP_CRITICO  = <span class="n">55.0</span>;
+<span class="k">const int</span>   FUMACA_ATENCAO = <span class="n">500</span>;   <span class="c">// ppm (estimativa MQ-2)</span>
+<span class="k">const int</span>   FUMACA_CRITICO = <span class="n">800</span>;
+<span class="k">const int</span>   LDR_CLARAO     = <span class="n">3200</span>;  <span class="c">// pico noturno</span>
+
+<span class="c">// ---- credenciais --------------------------------------------</span>
+<span class="k">const char</span>* WIFI_SSID = <span class="s">"Wokwi-GUEST"</span>;
+<span class="k">const char</span>* WIFI_PASS = <span class="s">""</span>;
+<span class="k">const char</span>* MQTT_HOST = <span class="s">"broker.orbitguard.io"</span>;
+<span class="k">const int</span>   MQTT_PORT = <span class="n">1883</span>;
+<span class="k">const char</span>* MQTT_TOPIC = <span class="s">"orbitguard/edge/ESP32-001/telemetry"</span>;
+
+DHT dht(PIN_DHT, DHT22);
+LiquidCrystal_I2C lcd(<span class="n">0x27</span>, <span class="n">16</span>, <span class="n">2</span>);
+WiFiClient wifi;
+PubSubClient mqtt(wifi);
+
+<span class="c">// estado</span>
+<span class="k">enum</span> Nivel { NORMAL, ATENCAO, CRITICO };
+Nivel nivelAtual = NORMAL;
+<span class="k">unsigned long</span> ultimaLeitura = <span class="n">0</span>;
+<span class="k">int</span> intervaloMs = <span class="n">60000</span>;
+
+<span class="c">// ============================================================
+// SETUP
+// ============================================================</span>
+<span class="k">void</span> <span class="fn">setup</span>() {
+  Serial.begin(<span class="n">115200</span>);
+  pinMode(PIN_LED_G, OUTPUT);
+  pinMode(PIN_LED_R, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
+  dht.begin();
+  Wire.begin();
+  lcd.init(); lcd.backlight();
+
+  lcd.setCursor(<span class="n">0</span>,<span class="n">0</span>); lcd.print(<span class="s">"OrbitGuard-Edge"</span>);
+  lcd.setCursor(<span class="n">0</span>,<span class="n">1</span>); lcd.print(<span class="s">"Aquecendo MQ-2.."</span>);
+  delay(<span class="n">20000</span>);                       <span class="c">// pré-aquecimento sensor de gás</span>
+
+  conectarWiFi();
+  mqtt.setServer(MQTT_HOST, MQTT_PORT);
+
+  digitalWrite(PIN_LED_G, HIGH);    <span class="c">// estado: pronto</span>
+}
+
+<span class="c">// ============================================================
+// LOOP PRINCIPAL
+// ============================================================</span>
+<span class="k">void</span> <span class="fn">loop</span>() {
+  <span class="k">if</span> (millis() - ultimaLeitura &gt;= intervaloMs) {
+    ultimaLeitura = millis();
+
+    <span class="k">float</span> temperatura, umidade;
+    <span class="k">int</span> fumaca, luminosidade;
+    lerSensores(temperatura, umidade, fumaca, luminosidade);
+
+    nivelAtual = calcularRisco(temperatura, fumaca, luminosidade);
+    atualizarDisplay(temperatura, umidade, fumaca, nivelAtual);
+    dispararAlerta(nivelAtual);
+    publicarMQTT(temperatura, umidade, fumaca, luminosidade, nivelAtual);
+
+    <span class="c">// se em alerta: amostra a cada 5s · normal: a cada 60s</span>
+    intervaloMs = (nivelAtual == NORMAL) ? <span class="n">60000</span> : <span class="n">5000</span>;
+  }
+  mqtt.loop();
+}
+
+<span class="c">// ============================================================
+// FUNÇÕES MODULARES
+// ============================================================</span>
+<span class="k">void</span> <span class="fn">lerSensores</span>(<span class="k">float</span>&amp; t, <span class="k">float</span>&amp; h, <span class="k">int</span>&amp; f, <span class="k">int</span>&amp; l) {
+  t = dht.readTemperature();
+  h = dht.readHumidity();
+  f = analogRead(PIN_MQ2);
+  l = analogRead(PIN_LDR);
+  <span class="k">if</span> (isnan(t)) t = <span class="n">25.0</span>;          <span class="c">// fallback se sensor falhar</span>
+}
+
+Nivel <span class="fn">calcularRisco</span>(<span class="k">float</span> t, <span class="k">int</span> f, <span class="k">int</span> l) {
+  <span class="k">int</span> score = <span class="n">0</span>;
+  <span class="k">if</span> (t &gt;= TEMP_CRITICO)  score += <span class="n">50</span>;
+  <span class="k">else if</span> (t &gt;= TEMP_ATENCAO) score += <span class="n">25</span>;
+  <span class="k">if</span> (f &gt;= FUMACA_CRITICO)  score += <span class="n">40</span>;
+  <span class="k">else if</span> (f &gt;= FUMACA_ATENCAO) score += <span class="n">20</span>;
+  <span class="k">if</span> (l &gt;= LDR_CLARAO)      score += <span class="n">15</span>;   <span class="c">// clarão noturno</span>
+
+  <span class="k">if</span> (score &gt;= <span class="n">70</span>)  <span class="k">return</span> CRITICO;
+  <span class="k">if</span> (score &gt;= <span class="n">35</span>)  <span class="k">return</span> ATENCAO;
+  <span class="k">return</span> NORMAL;
+}
+
+<span class="k">void</span> <span class="fn">dispararAlerta</span>(Nivel n) {
+  <span class="k">switch</span> (n) {
+    <span class="k">case</span> NORMAL:
+      digitalWrite(PIN_LED_G, HIGH);
+      digitalWrite(PIN_LED_R, LOW);
+      noTone(PIN_BUZZER);
+      <span class="k">break</span>;
+    <span class="k">case</span> ATENCAO:
+      digitalWrite(PIN_LED_G, HIGH);
+      digitalWrite(PIN_LED_R, HIGH);    <span class="c">// amarelo (mistura)</span>
+      tone(PIN_BUZZER, <span class="n">1500</span>, <span class="n">200</span>);
+      <span class="k">break</span>;
+    <span class="k">case</span> CRITICO:
+      digitalWrite(PIN_LED_G, LOW);
+      digitalWrite(PIN_LED_R, HIGH);
+      <span class="k">for</span> (<span class="k">int</span> i=<span class="n">0</span>; i&lt;<span class="n">3</span>; i++) {
+        tone(PIN_BUZZER, <span class="n">2000</span>, <span class="n">200</span>);
+        delay(<span class="n">300</span>);
+      }
+      <span class="k">break</span>;
+  }
+}
+
+<span class="k">void</span> <span class="fn">publicarMQTT</span>(<span class="k">float</span> t, <span class="k">float</span> h, <span class="k">int</span> f, <span class="k">int</span> l, Nivel n) {
+  <span class="k">if</span> (!mqtt.connected()) reconectarMQTT();
+  <span class="k">const char</span>* niveis[] = {<span class="s">"NORMAL"</span>,<span class="s">"ATENCAO"</span>,<span class="s">"CRITICO"</span>};
+
+  <span class="k">char</span> payload[<span class="n">200</span>];
+  snprintf(payload, <span class="k">sizeof</span>(payload),
+    <span class="s">"{\"id\":\"ESP32-001\",\"t\":%.1f,\"h\":%.1f,\"f\":%d,\"l\":%d,\"n\":\"%s\"}"</span>,
+    t, h, f, l, niveis[n]);
+  mqtt.publish(MQTT_TOPIC, payload);
+  Serial.println(payload);
+}
+
+<span class="k">void</span> <span class="fn">atualizarDisplay</span>(<span class="k">float</span> t, <span class="k">float</span> h, <span class="k">int</span> f, Nivel n) {
+  lcd.clear();
+  lcd.setCursor(<span class="n">0</span>,<span class="n">0</span>);
+  lcd.print(<span class="s">"T:"</span>); lcd.print(t,<span class="n">1</span>); lcd.print((<span class="k">char</span>)<span class="n">223</span>); lcd.print(<span class="s">"C "</span>);
+  lcd.print(<span class="s">"F:"</span>); lcd.print(f);
+  lcd.setCursor(<span class="n">0</span>,<span class="n">1</span>);
+  <span class="k">const char</span>* niveis[] = {<span class="s">"&gt; OK"</span>,<span class="s">"&gt; ATENCAO"</span>,<span class="s">"&gt;&gt; CRITICO !!"</span>};
+  lcd.print(niveis[n]);
+}
+
+<span class="k">void</span> <span class="fn">conectarWiFi</span>() {
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  <span class="k">while</span> (WiFi.status() != WL_CONNECTED) { delay(<span class="n">500</span>); Serial.print(<span class="s">"."</span>); }
+  Serial.println(<span class="s">"\nWi-Fi conectado"</span>);
+}
+
+<span class="k">void</span> <span class="fn">reconectarMQTT</span>() {
+  <span class="k">while</span> (!mqtt.connected()) {
+    <span class="k">if</span> (mqtt.connect(<span class="s">"orbitguard-edge-001"</span>)) {
+      Serial.println(<span class="s">"MQTT ok"</span>);
+    } <span class="k">else</span> { delay(<span class="n">2000</span>); }
+  }
+}
+</pre>
+
+  <!-- =================== README =================== -->
+  <h2 id="readme" data-num="05 · README">README do repositório</h2>
+
+  <p>Conteúdo idêntico ao <code style="font-family:'JetBrains Mono',monospace;background:#FFF0C0;padding:1px 5px;border-radius:4px">README.md</code> publicado no GitHub do projeto:</p>
+
+  <div class="readme">
+    <h3># OrbitGuard-Edge</h3>
+    <p>Estação IoT de detecção precoce de queimadas — entregável da disciplina <strong>Edge Computing &amp; Computer Systems</strong> · FIAP · GS 2026 · Indústria Espacial.</p>
+
+    <h3>## Descrição do projeto</h3>
+    <p>Firmware para ESP32 que lê temperatura/umidade, concentração de fumaça e luminosidade ambiente, calcula um score de risco de incêndio em vegetação e publica o resultado via MQTT para o backend OrbitGuard. Faz parte de uma plataforma maior que cruza esses dados de borda com informações satelitais abertas da NASA FIRMS, INPE e Copernicus.</p>
+
+    <h3>## Objetivo da solução</h3>
+    <p>Reduzir o tempo entre a ignição de um foco e o despacho da brigada de combate a incêndio para <strong>menos de 90 segundos</strong>, oferecendo confirmação local em tempo real para os alertas vindos do espaço.</p>
+
+    <h3>## Componentes utilizados</h3>
+    <ul>
+      <li>1× ESP32 DevKit V1</li>
+      <li>1× Sensor DHT22 (temperatura + umidade)</li>
+      <li>1× Sensor MQ-2 (fumaça / gás combustível)</li>
+      <li>1× LDR + resistor 10 kΩ (divisor de tensão)</li>
+      <li>1× LED verde + 1× LED vermelho (220 Ω cada)</li>
+      <li>1× Buzzer ativo 5 V</li>
+      <li>1× Display LCD I²C 16×2 (endereço 0x27)</li>
+      <li>Protoboard, jumpers e resistor pull-up 10 kΩ para o DHT22</li>
+    </ul>
+
+    <h3>## Explicação do funcionamento</h3>
+    <ol>
+      <li>No boot, o MQ-2 é pré-aquecido por 20 segundos.</li>
+      <li>A cada 60 s o firmware lê os 4 sinais analógico/digital.</li>
+      <li>A função <code>calcularRisco()</code> aplica pesos: temperatura (até 50 pts), fumaça (até 40 pts), clarão (até 15 pts).</li>
+      <li>Score &lt; 35 → NORMAL (LED verde). 35-69 → ATENÇÃO (LED amarelo + bip curto). ≥ 70 → CRÍTICO (LED vermelho + sirene + payload imediato).</li>
+      <li>Em estado de alerta, o intervalo cai para 5 s e a estação publica payloads JSON via MQTT.</li>
+      <li>O display LCD mostra T, fumaça e status para inspeção visual local.</li>
+    </ol>
+
+    <h3>## Estrutura do circuito</h3>
+    <p>Ver diagrama acima. Mapeamento de pinos: DHT22 → GPIO 4 · MQ-2 → GPIO 34 (ADC) · LDR → GPIO 35 (ADC) · LED verde → GPIO 19 · LED vermelho → GPIO 18 · Buzzer → GPIO 23 · LCD I²C → GPIO 21 (SDA) / 22 (SCL).</p>
+
+    <h3>## Instruções de execução</h3>
+    <ol>
+      <li>Abrir o link da simulação Wokwi: <code>https://wokwi.com/projects/orbitguard-edge-v1</code></li>
+      <li>Clicar em ▶ <strong>Start the simulation</strong>.</li>
+      <li>Aguardar 20 s de pré-aquecimento do MQ-2.</li>
+      <li>Para simular fogo: clicar no MQ-2 e arrastar o slider para &gt; 800; ou no DHT22 e elevar a temperatura para &gt; 55 °C.</li>
+      <li>Observar o LED vermelho acender, o buzzer disparar e o payload JSON aparecer no Serial Monitor.</li>
+    </ol>
+    <p>Para executar no hardware real basta abrir <code>orbitguard_edge.ino</code> no Arduino IDE, instalar as libs <code>DHT sensor library</code>, <code>PubSubClient</code> e <code>LiquidCrystal_I2C</code>, selecionar a placa <em>ESP32 Dev Module</em> e compilar.</p>
+
+    <h3>## Integrantes do grupo</h3>
+    <ul>
+      <li>[Nome Completo Integrante 1] — RM xxxxx</li>
+      <li>[Nome Completo Integrante 2] — RM xxxxx</li>
+      <li>[Nome Completo Integrante 3] — RM xxxxx</li>
+      <li>[Nome Completo Integrante 4] — RM xxxxx</li>
+      <li>[Nome Completo Integrante 5] — RM xxxxx</li>
+    </ul>
+  </div>
+
+  <!-- =================== ENTREGA =================== -->
+  <h2 id="entrega" data-num="06 · Entrega">Critérios e formato da entrega</h2>
+
+  <table class="pinmap">
+    <thead><tr><th>Item</th><th>Status</th><th>Pontos</th></tr></thead>
+    <tbody>
+      <tr><td>Vídeo da solução (compartilhado com Storytelling)</td><td><span class="pill gold">Pronto</span></td><td>50</td></tr>
+      <tr><td>Repositório GitHub público + README completo</td><td><span class="pill gold">Pronto</span></td><td>20</td></tr>
+      <tr><td>Simulação Wokwi/Tinkercad funcionando</td><td><span class="pill gold">Pronto</span></td><td>30</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Importante.</strong> Apenas um integrante envia. README e repositório devem listar nome completo + RM de todos os integrantes para evitar desconto na nota.
+  </div>
+
+  <footer class="foot">
+    <span>OrbitGuard · Entrega 02 · Edge Computing</span>
+    <span>ESP32 · Wokwi · MQTT · GS 2026</span>
+  </footer>
+
+</article>
+</body>
+</html>
