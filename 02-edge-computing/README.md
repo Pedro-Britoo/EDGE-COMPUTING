@@ -195,10 +195,7 @@ Baud Rate: 9600
 
 O projeto pode ser executado em:
 
-* Wokwi
-* Tinkercad
-* Hardware físico Arduino
-
+https://www.tinkercad.com/things/9Meog7P4z3i/editel?returnTo=%2Fdashboard
 ---
 
 ## 👥 Integrantes do Grupo
