@@ -209,6 +209,8 @@ https://www.tinkercad.com/things/9Meog7P4z3i/editel?returnTo=%2Fdashboard
 
 ---
 
+link  video https://www.youtube.com/shorts/Rr76OjzVFLM
+
 ## 📄 Licença
 
 Projeto acadêmico desenvolvido para a disciplina **Edge Computing & Computer Systems – FIAP (GS 2026)**.
