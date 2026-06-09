@@ -209,7 +209,7 @@ https://www.tinkercad.com/things/9Meog7P4z3i/editel?returnTo=%2Fdashboard
 
 ---
 
-link  video https://www.youtube.com/shorts/Rr76OjzVFLM
+link  video https://youtu.be/ZLADFyYVN9s
 
 ## 📄 Licença
 
